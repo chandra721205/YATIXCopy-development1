@@ -1,4 +1,4 @@
-import { useState, useReducer, Suspense, lazy } from 'react';
+import { useReducer, Suspense, lazy, startTransition } from 'react';
 import { motion } from 'motion/react';
 import { 
   Search, TrendingUp, Heart, Mountain, 
@@ -156,9 +156,6 @@ export function MainHome({ userData, onNavigate, onShowComboTour }: MainHomeProp
 
   const handleCategorySelect = (target: string) => {
     try {
-      dispatch({ type: 'NAVIGATE_TO', screen: 'home' }); // Close overlay first
-      
-      // Map category targets to screens
       const screenMap: Record<string, Screen> = {
         'devotional': 'devotional',
         'adventure': 'adventure',
@@ -174,9 +171,14 @@ export function MainHome({ userData, onNavigate, onShowComboTour }: MainHomeProp
 
       const screen = screenMap[target];
       if (screen) {
-        dispatch({ type: 'NAVIGATE_TO', screen });
+        startTransition(() => {
+          dispatch({ type: 'NAVIGATE_TO', screen: 'home' });
+          dispatch({ type: 'NAVIGATE_TO', screen });
+        });
       } else if (target === 'NEW') {
-        dispatch({ type: 'SHOW_NEW_CATEGORY', categoryType: 'other' });
+        startTransition(() => {
+          dispatch({ type: 'SHOW_NEW_CATEGORY', categoryType: 'other' });
+        });
       } else {
         console.warn('Unknown category target:', target);
       }
@@ -186,20 +188,16 @@ export function MainHome({ userData, onNavigate, onShowComboTour }: MainHomeProp
   };
 
   const handleBack = () => {
-    dispatch({ type: 'GO_BACK' });
+    startTransition(() => {
+      dispatch({ type: 'GO_BACK' });
+    });
   };
 
   // 🎯 POPULAR COMBINATIONS - Quick Select Handler
   const handleQuickSelectCombo = (comboId: string, categoryIds: string[]) => {
-    if (comboId === 'custom-mix' || categoryIds.length === 0) {
-      // Open full category selection overlay
+    startTransition(() => {
       dispatch({ type: 'NAVIGATE_TO', screen: 'combo-tour' });
-    } else {
-      // Quick-start with pre-selected categories
-      // TODO: Pass pre-selected categories to ComboTourFlow
-      // For now, just open the combo tour flow
-      dispatch({ type: 'NAVIGATE_TO', screen: 'combo-tour' });
-    }
+    });
   };
 
   // 🎭 RENDER SCREENS BASED ON STATE
@@ -298,7 +296,7 @@ export function MainHome({ userData, onNavigate, onShowComboTour }: MainHomeProp
       <Suspense fallback={<LoadingFallback />}>
         <TravelEssentialsHub 
           onBack={handleBack} 
-          onNavigateToSelfDrive={() => dispatch({ type: 'NAVIGATE_TO', screen: 'self-drive' })}
+          onNavigateToSelfDrive={() => startTransition(() => dispatch({ type: 'NAVIGATE_TO', screen: 'self-drive' }))}
         />
       </Suspense>
     );
@@ -371,8 +369,8 @@ export function MainHome({ userData, onNavigate, onShowComboTour }: MainHomeProp
               <h2 className="text-white font-bold text-lg mb-1">Grok AI Assistant</h2>
               <p className="text-white/90 text-sm">Plan your perfect multi-category tour</p>
             </div>
-            <Button 
-              onClick={() => dispatch({ type: 'NAVIGATE_TO', screen: 'combo-tour' })}
+            <Button
+              onClick={() => startTransition(() => dispatch({ type: 'NAVIGATE_TO', screen: 'combo-tour' }))}
               className="bg-white text-purple-600 hover:bg-gray-100 rounded-full h-10 px-5 font-semibold shadow-md"
             >
               Start Planning
@@ -388,7 +386,7 @@ export function MainHome({ userData, onNavigate, onShowComboTour }: MainHomeProp
             <div className="grid grid-cols-2 gap-4">
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                onClick={() => dispatch({ type: 'NAVIGATE_TO', screen: 'category-overlay' })}
+                onClick={() => startTransition(() => dispatch({ type: 'NAVIGATE_TO', screen: 'category-overlay' }))}
                 className="bg-white rounded-3xl p-4 shadow-md hover:shadow-lg transition-all"
               >
                 <Calendar className="w-8 h-8 text-blue-600 mb-2" />
@@ -397,7 +395,7 @@ export function MainHome({ userData, onNavigate, onShowComboTour }: MainHomeProp
               </motion.button>
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                onClick={() => dispatch({ type: 'NAVIGATE_TO', screen: 'combo-tour' })}
+                onClick={() => startTransition(() => dispatch({ type: 'NAVIGATE_TO', screen: 'combo-tour' }))}
                 className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-3xl p-4 shadow-md hover:shadow-lg transition-all relative overflow-hidden"
               >
                 <div className="absolute top-1 right-1 bg-yellow-400 text-yellow-900 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
@@ -411,7 +409,7 @@ export function MainHome({ userData, onNavigate, onShowComboTour }: MainHomeProp
             {/* Bottom button - Travel Essentials */}
             <motion.button
               whileTap={{ scale: 0.95 }}
-              onClick={() => dispatch({ type: 'NAVIGATE_TO', screen: 'essentials' })}
+              onClick={() => startTransition(() => dispatch({ type: 'NAVIGATE_TO', screen: 'essentials' }))}
               className="w-full bg-white rounded-3xl p-4 shadow-md hover:shadow-lg transition-all flex items-center gap-4"
             >
               <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center">
@@ -461,7 +459,7 @@ export function MainHome({ userData, onNavigate, onShowComboTour }: MainHomeProp
                 whileTap={{ scale: 0.95 }}
                 onClick={() => {
                   const screen = category.id as Screen;
-                  dispatch({ type: 'NAVIGATE_TO', screen });
+                  startTransition(() => dispatch({ type: 'NAVIGATE_TO', screen }));
                 }}
                 className={`bg-gradient-to-br ${category.gradient} rounded-2xl p-4 shadow-md hover:shadow-lg transition-all aspect-square flex flex-col items-center justify-center text-center relative`}
               >
